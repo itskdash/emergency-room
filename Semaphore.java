@@ -39,25 +39,4 @@ public class Semaphore {
 
         return false;
     }
-
-    public synchronized boolean tryget(int timePeriod) throws InterruptedException {
-
-        long start = System.nanoTime();
-        long timeout = timePeriod * 1_000_000L;
-        long remaining = timeout;
-
-        while (availableUnits == 0 && remaining > 0) {
-            wait(remaining / 1_000_000, (int) (remaining % 1_000_000));
-
-            long passed = System.nanoTime() - start;
-            remaining = timeout - passed;
-        }
-
-        if (availableUnits > 0) {
-            availableUnits--;
-            return true;
-        }
-
-        return false;
-    }
 }
