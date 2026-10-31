@@ -1,42 +1,63 @@
 public class Semaphore {
-    private int treatmentRooms;
-    private int maxRooms;
+    private int availableUnits;
+    private int maxUnits;
 
-    public Semaphore(int treatmentRooms) {
-        this.treatmentRooms = treatmentRooms;
-        this.maxRooms = treatmentRooms;
+    public Semaphore(int availableUnits) {
+        this.availableUnits = availableUnits;
+        this.maxUnits = availableUnits;
     }
 
     public synchronized void get() throws InterruptedException {
-        while (treatmentRooms == 0) {
+        while (availableUnits == 0) {
             wait();
         }
-        treatmentRooms--;
+        availableUnits--;
     }
 
     public synchronized void free() {
-        if (treatmentRooms < maxRooms){
-        treatmentRooms++;
-        notifyAll();
+        if (availableUnits < maxUnits) {
+            availableUnits++;
+            notifyAll();
         }
     }
 
     public synchronized boolean tryget() throws InterruptedException {
-        
+
         long start = System.nanoTime();
-        long timeout = 5_000_000_000L;
+        long timeout = 3_000_000_000L;
         long passed = 0;
         long remaining = timeout;
-        while (treatmentRooms == 0 && remaining > 0){
-            wait(remaining / 1_000_000, (int)(remaining % 1_000_000));
+        while (availableUnits == 0 && remaining > 0) {
+            wait(remaining / 1_000_000, (int) (remaining % 1_000_000));
             passed = System.nanoTime() - start;
             remaining = timeout - passed;
         }
-        if (treatmentRooms > 0) {
-            treatmentRooms--;
+        if (availableUnits > 0) {
+            availableUnits--;
             return true;
         }
-            
+
+        return false;
+    }
+
+    public synchronized boolean tryget(int timePeriod) throws InterruptedException {
+
+        long start = System.nanoTime();
+        long timeout = timePeriod * 1_000_000L;
+        long remaining = timeout;
+
+        while (availableUnits == 0 && remaining > 0) {
+            wait(remaining / 1_000_000, (int) (remaining % 1_000_000));
+
+            long passed = System.nanoTime() - start;
+            remaining = timeout - passed;
+        }
+
+        if (availableUnits > 0) {
+            availableUnits--;
+            return true;
+        }
+
         return false;
     }
 }
