@@ -17,7 +17,7 @@ public class Hospital {
     public void simulationEvents() {
         System.out.println("Patients arriving:");
         for (int i = 1; i <= numberOfPatients; i++) {
-            Patient p = new Patient(i);
+            Patient p = new Patient(i, null);
             p.arriving();
         }
         System.out.println();
