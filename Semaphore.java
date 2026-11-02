@@ -1,10 +1,8 @@
 public class Semaphore {
     private int availableUnits;
-    private int maxUnits;
 
     public Semaphore(int availableUnits) {
         this.availableUnits = availableUnits;
-        this.maxUnits = availableUnits;
     }
 
     public synchronized void get() throws InterruptedException {
@@ -15,28 +13,29 @@ public class Semaphore {
     }
 
     public synchronized void free() {
-        if (availableUnits < maxUnits) {
-            availableUnits++;
-            notifyAll();
-        }
+        availableUnits++;
+        notifyAll();
     }
 
-    public synchronized boolean tryget() throws InterruptedException {
+    public synchronized boolean tryGetNow() {
+        if (availableUnits > 0) {
+            availableUnits--;
+            return true;
+        }
+        return false;
+    }
 
-        long start = System.nanoTime();
-        long timeout = 3_000_000_000L;
-        long passed = 0;
-        long remaining = timeout;
+    public synchronized boolean tryget(long timeoutMillis) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        long remaining = timeoutMillis;
         while (availableUnits == 0 && remaining > 0) {
-            wait(remaining / 1_000_000, (int) (remaining % 1_000_000));
-            passed = System.nanoTime() - start;
-            remaining = timeout - passed;
+            wait(remaining);
+            remaining = deadline - System.currentTimeMillis();
         }
         if (availableUnits > 0) {
             availableUnits--;
             return true;
         }
-
         return false;
     }
 }
